@@ -22,18 +22,28 @@ public_users.post("/register", (req,res) => {
     }
 });
 
+
+function getByISBN(isbn) {
+    return new Promise((resolve, reject) => {
+        let isbnNum = parseInt(isbn);
+        if (books[isbnNum]) {
+            resolve(books[isbnNum]);
+        } else {
+            reject({status:404, message:`ISBN ${isbn} not found`});
+        }
+    })
+}
+
 public_users.get('/', function (req, res) {
-    res.send(JSON.stringify(books));
-});
+    getBooks().then((bks) => res.send(JSON.stringify(bks)));});
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
-    let isbnNum = parseInt(req.params.isbn);
-    if (books[isbnNum]) {
-        res.send(books[isbnNum]);
-    } else {
-        res.status(error.status).json({message: error.message})
-    }
+    getByISBN(req.params.isbn)
+    .then(
+        result => res.send(result),
+        error => res.status(error.status).json({message: error.message})
+    );
  });
   
 // Get book details based on author
@@ -56,14 +66,12 @@ public_users.get('/title/:title',function (req, res) {
 
 //  Get book review
 public_users.get('/review/:isbn',function (req, res) {
-    let isbnNum = parseInt(req.params.isbn);
-    
-    if (books[isbnNum]) {
-        const r = books[isbnNum].review;
-        res.send(r);
-    } else {
-        res.status(error.status).json({message: error.message})
-    }
+    const isbn = req.params.isbn;
+    getByISBN(req.params.isbn)
+    .then(
+        result => res.send(result.reviews),
+        error => res.status(error.status).json({message: error.message})
+    );
 });
 
 
